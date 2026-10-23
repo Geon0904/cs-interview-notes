@@ -1,0 +1,70 @@
+import { useEffect, type CSSProperties } from 'react';
+import { Link, Navigate, NavLink, useLoaderData, useParams, useSearchParams } from 'react-router';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { Icon } from '../components/Icon';
+import { stageOf } from '../content/load';
+import type { Topic } from '../content/types';
+import { isTopicTab, parseSection, TOPIC_TABS, topicPath } from '../routes';
+import { useProgressDispatch } from '../state/ProgressProvider';
+import { ConceptTab } from './topic/ConceptTab';
+import { LearnTab } from './topic/LearnTab';
+import { QaTab } from './topic/QaTab';
+import { QuizTab } from './topic/QuizTab';
+
+/**
+ * 주제 화면. 본문 데이터는 라우터의 loader가 화면을 그리기 전에 미리 불러 둡니다(App.tsx 참고).
+ * 그래서 이 컴포넌트 안에는 "로딩 중" 분기가 없고, 항상 데이터가 있는 상태로 시작해요.
+ */
+export default function TopicPage() {
+  const topic = useLoaderData() as Topic;
+  const { tab } = useParams();
+  const [params] = useSearchParams();
+  const dispatch = useProgressDispatch();
+  const hasLessons = topic.sections.some((s) => s.lessons.length > 0);
+  const sec = parseSection(params.get('s'), topic.sections.length);
+  const validTab = isTopicTab(tab) && (tab !== 'learn' || hasLessons);
+  useDocumentTitle(topic.ko);
+
+  // 설명·문답을 보고 있으면 '이어서 학습' 위치로 기억해요.
+  // 화면 그리기와 상관없는 "부수 효과"라서 렌더링 중이 아니라 useEffect에서 처리합니다.
+  useEffect(() => {
+    if (validTab) dispatch({ type: 'visit', tid: topic.id, sec, tab: tab === 'learn' || tab === 'qa' ? tab : null });
+  }, [dispatch, topic.id, sec, tab, validTab]);
+
+  if (!validTab) return <Navigate to={topicPath(topic.id, hasLessons ? 'learn' : 'concept', sec)} replace />;
+
+  const st = stageOf(topic.id);
+  const tabs = TOPIC_TABS.filter((t) => t.key !== 'learn' || hasLessons);
+
+  return (
+    <main className="wrap">
+      <header className="thead">
+        <div className="top">
+          <Link className="back" to="/" aria-label="주제 목록으로">
+            <Icon name="back" size={20} />
+          </Link>
+          <div className="tt">
+            <span className="eyebrow">
+              {st.no} · {topic.id} · {topic.en}
+            </span>
+            <h1>{topic.ko}</h1>
+          </div>
+        </div>
+        {/* 탭마다 주소가 다른 '화면 이동'이라 role="tab" 대신 링크 + aria-current로 만들었어요. */}
+        <nav className="seg" aria-label="학습 방법" style={{ '--tabs': tabs.length } as CSSProperties}>
+          {tabs.map((t) => (
+            <NavLink key={t.key} to={topicPath(topic.id, t.key, sec)} replace>
+              {t.label}
+            </NavLink>
+          ))}
+        </nav>
+      </header>
+
+      {/* key: 주제·섹션이 바뀌면 탭 컴포넌트를 새로 만들어 내부 상태(열린 카드, 퀴즈 진행)를 초기화 */}
+      {tab === 'learn' && <LearnTab key={`${topic.id}-${sec}`} topic={topic} sec={sec} />}
+      {tab === 'concept' && <ConceptTab topic={topic} />}
+      {tab === 'qa' && <QaTab key={`${topic.id}-${sec}`} topic={topic} sec={sec} />}
+      {tab === 'quiz' && <QuizTab key={topic.id} topic={topic} sec={sec} />}
+    </main>
+  );
+}
