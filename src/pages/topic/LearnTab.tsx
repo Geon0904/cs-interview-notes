@@ -3,6 +3,7 @@ import { FieldView, Inline } from '../../components/Blocks';
 import { Icon } from '../../components/Icon';
 import { SectionPicker } from '../../components/SectionPicker';
 import type { Topic } from '../../content/types';
+import { useLang } from '../../i18n/LangProvider';
 import { topicPath } from '../../routes';
 import { useProgress, useProgressDispatch } from '../../state/ProgressProvider';
 import { TopicIntro } from './TopicIntro';
@@ -15,6 +16,7 @@ const scrollBehavior = (): ScrollBehavior =>
 export function LearnTab({ topic, sec }: { topic: Topic; sec: number }) {
   const p = useProgress();
   const dispatch = useProgressDispatch();
+  const { t, base } = useLang();
   const s = topic.sections[sec]!;
   const lessons = s.lessons;
   const hasNext = sec + 1 < topic.sections.length;
@@ -25,7 +27,7 @@ export function LearnTab({ topic, sec }: { topic: Topic; sec: number }) {
       <SectionPicker
         titles={topic.sections.map((x) => x.title)}
         current={sec}
-        hrefFor={(i) => topicPath(topic.id, 'learn', i)}
+        hrefFor={(i) => topicPath(base, topic.id, 'learn', i)}
         done={(i) => !!p.read[`${topic.id}:${i}`]}
       />
 
@@ -35,18 +37,18 @@ export function LearnTab({ topic, sec }: { topic: Topic; sec: number }) {
         <h2>
           {sec + 1}. <Inline text={s.title} />
         </h2>
-        <span>개념 {lessons.length}개</span>
+        <span>{t.lessonCount(lessons.length)}</span>
       </div>
 
       {lessons.length === 0 ? (
         <div className="empty">
-          <b>이 섹션은 아직 설명을 준비 중이에요</b>
-          <span>문답에서 먼저 공부할 수 있어요.</span>
+          <b>{t.lessonsEmptyTitle}</b>
+          <span>{t.lessonsEmptyBody}</span>
         </div>
       ) : (
         <>
           {lessons.length > 1 && (
-            <nav className="toc" aria-label="이 섹션에서 배울 것">
+            <nav className="toc" aria-label={t.lessonToc}>
               {lessons.map((l, i) => (
                 <button
                   key={i}
@@ -81,16 +83,16 @@ export function LearnTab({ topic, sec }: { topic: Topic; sec: number }) {
         </>
       )}
 
-      <Link className="cta" to={topicPath(topic.id, 'qa', sec)} onClick={markRead}>
-        이해했어요 · 문답으로 확인 <Icon name="arrow" />
+      <Link className="cta" to={topicPath(base, topic.id, 'qa', sec)} onClick={markRead}>
+        {t.learnToQa} <Icon name="arrow" />
       </Link>
       {hasNext ? (
-        <Link className="cta ghost" to={topicPath(topic.id, 'learn', sec + 1)} onClick={markRead}>
-          다음 설명: {sec + 2}. <Inline text={topic.sections[sec + 1]!.title} />
+        <Link className="cta ghost" to={topicPath(base, topic.id, 'learn', sec + 1)} onClick={markRead}>
+          {t.nextLesson} {sec + 2}. <Inline text={topic.sections[sec + 1]!.title} />
         </Link>
       ) : (
-        <Link className="cta ghost" to={topicPath(topic.id, 'quiz', sec)} onClick={markRead}>
-          확인 퀴즈 풀기 <Icon name="arrow" />
+        <Link className="cta ghost" to={topicPath(base, topic.id, 'quiz', sec)} onClick={markRead}>
+          {t.takeQuiz} <Icon name="arrow" />
         </Link>
       )}
     </>

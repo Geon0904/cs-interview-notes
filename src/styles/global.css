@@ -241,3 +241,11 @@ ol.bsteps .sd{display:block;color:#D9DED5}
 .pending{position:fixed;top:0;left:0;right:0;height:2px;z-index:40;background:linear-gradient(90deg,transparent,var(--neon),transparent);background-size:50% 100%;background-repeat:no-repeat;animation:pend 1s linear infinite}
 @keyframes pend{from{background-position:-50% 0}to{background-position:150% 0}}
 @media (prefers-reduced-motion:reduce){.pending{animation:none;background:var(--neon)}}
+
+/* language toggle */
+.hero-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.lang{display:flex;gap:2px;padding:3px;border-radius:12px;background:var(--surface);border:1px solid var(--line);flex-shrink:0}
+.lang a{min-width:40px;height:32px;padding:0 8px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--muted)}
+.lang a:hover{color:var(--text)}
+.lang a[aria-current="true"]{background:var(--neon);color:var(--ink)}
+.thead .top .lang{margin-left:auto}

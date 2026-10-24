@@ -4,11 +4,10 @@ import { BlockView, Inline } from '../../components/Blocks';
 import { Icon } from '../../components/Icon';
 import { SectionPicker } from '../../components/SectionPicker';
 import type { Topic } from '../../content/types';
+import { useLang } from '../../i18n/LangProvider';
 import { topicPath } from '../../routes';
 import { cardKey, firstOpenCard, nextOpenCard, progressReducer, sectionDone, type ProgressAction } from '../../state/progress';
 import { useProgress, useProgressDispatch } from '../../state/ProgressProvider';
-
-const DOT_LABEL = { ok: '이해함', again: '다시 볼 문항', none: '아직 안 봄' } as const;
 
 /**
  * 문답 탭: 질문 카드를 하나씩 펼쳐 보고 '이해했어요 / 다시 볼래요'로 표시해요.
@@ -17,6 +16,7 @@ const DOT_LABEL = { ok: '이해함', again: '다시 볼 문항', none: '아직 �
 export function QaTab({ topic, sec }: { topic: Topic; sec: number }) {
   const p = useProgress();
   const dispatch = useProgressDispatch();
+  const { t, base } = useLang();
   const s = topic.sections[sec]!;
   const n = s.cards.length;
 
@@ -54,7 +54,7 @@ export function QaTab({ topic, sec }: { topic: Topic; sec: number }) {
       <SectionPicker
         titles={topic.sections.map((x) => x.title)}
         current={sec}
-        hrefFor={(i) => topicPath(topic.id, 'qa', i)}
+        hrefFor={(i) => topicPath(base, topic.id, 'qa', i)}
         done={(i) => sectionDone(p, topic.id, i, topic.sections[i]!.cards.length) === topic.sections[i]!.cards.length}
       />
 
@@ -62,9 +62,7 @@ export function QaTab({ topic, sec }: { topic: Topic; sec: number }) {
         <h2>
           {sec + 1}. <Inline text={s.title} />
         </h2>
-        <span>
-          {done}/{n} 이해
-        </span>
+        <span>{t.understoodCount(done, n)}</span>
       </div>
 
       {s.intro.length > 0 && (
@@ -86,7 +84,7 @@ export function QaTab({ topic, sec }: { topic: Topic; sec: number }) {
                 <span className="qq">
                   <Inline text={c.q} />
                 </span>
-                <span className={`dot ${st}`} role="img" aria-label={DOT_LABEL[st]} />
+                <span className={`dot ${st}`} role="img" aria-label={t.dot[st]} />
                 <span className="ic" aria-hidden="true">
                   {isOpen ? '−' : '+'}
                 </span>
@@ -104,10 +102,10 @@ export function QaTab({ topic, sec }: { topic: Topic; sec: number }) {
                     aria-pressed={st === 'again'}
                     onClick={() => dispatch({ type: 'card/toggleAgain', key: cardKey(topic.id, sec, ci) })}
                   >
-                    다시 볼래요
+                    {t.again}
                   </button>
                   <button type="button" className="got" aria-pressed={st === 'ok'} onClick={() => got(ci)}>
-                    이해했어요
+                    {t.gotIt}
                   </button>
                 </div>
               </div>
@@ -117,12 +115,12 @@ export function QaTab({ topic, sec }: { topic: Topic; sec: number }) {
       })}
 
       {hasNext && (
-        <Link className="cta" to={topicPath(topic.id, 'qa', sec + 1)}>
-          다음: {sec + 2}. <Inline text={topic.sections[sec + 1]!.title} /> <Icon name="arrow" />
+        <Link className="cta" to={topicPath(base, topic.id, 'qa', sec + 1)}>
+          {t.nextSection} {sec + 2}. <Inline text={topic.sections[sec + 1]!.title} /> <Icon name="arrow" />
         </Link>
       )}
-      <Link className={`cta${hasNext ? ' ghost' : ''}`} to={topicPath(topic.id, 'quiz', sec)}>
-        확인 퀴즈 풀기 <Icon name="arrow" />
+      <Link className={`cta${hasNext ? ' ghost' : ''}`} to={topicPath(base, topic.id, 'quiz', sec)}>
+        {t.takeQuiz} <Icon name="arrow" />
       </Link>
     </>
   );

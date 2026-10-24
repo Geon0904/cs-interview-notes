@@ -1,6 +1,7 @@
 import type { Block, LessonField } from '../content/types';
 import { commentStart } from '../content/code';
 import { splitTerm, tokenizeInline } from '../content/inline';
+import { useLang } from '../i18n/LangProvider';
 import { Icon } from './Icon';
 
 /** `코드`와 **굵게**만 있는 문장을 React 요소로 그려요. (텍스트는 React가 자동 이스케이프) */
@@ -15,10 +16,11 @@ export function Inline({ text }: { text: string }) {
 }
 
 export function CodeBlock({ text, lang }: { text: string; lang: string }) {
+  const { t } = useLang();
   const lines = text.split('\n');
   return (
     // tabIndex: 가로 스크롤되는 영역을 키보드로도 스크롤할 수 있게 (접근성)
-    <pre className="code" tabIndex={0} aria-label={lang ? `${lang} 코드` : '코드'}>
+    <pre className="code" tabIndex={0} aria-label={lang ? t.codeIn(lang) : t.code}>
       {lines.map((l, i) => {
         const c = commentStart(l, lang);
         return (
@@ -40,8 +42,9 @@ export function CodeBlock({ text, lang }: { text: string; lang: string }) {
 }
 
 export function Table({ head, rows }: { head: string[]; rows: string[][] }) {
+  const { t } = useLang();
   return (
-    <div className={`tbl${head.length >= 4 ? ' wide' : ''}`} tabIndex={0} role="region" aria-label="표 (가로로 스크롤할 수 있어요)">
+    <div className={`tbl${head.length >= 4 ? ' wide' : ''}`} tabIndex={0} role="region" aria-label={t.tableRegion}>
       <table>
         <thead>
           <tr>
@@ -68,17 +71,16 @@ export function Table({ head, rows }: { head: string[]; rows: string[][] }) {
   );
 }
 
-const SIMPLE_LABEL = { easy: '쉽게 이해하기', ans: '면접 답', mem: '기억할 것' } as const;
-
 /** 블록 종류(t)에 따라 알맞은 모양으로 그려요. switch가 모든 경우를 다루지 않으면 TypeScript가 알려 줍니다. */
 export function BlockView({ b }: { b: Block }) {
+  const { t } = useLang();
   switch (b.t) {
     case 'easy':
     case 'ans':
     case 'mem':
       return (
         <div className={`blk ${b.t}`}>
-          <span className="k">{SIMPLE_LABEL[b.t]}</span>
+          <span className="k">{t.block[b.t]}</span>
           <p>
             <Inline text={b.text} />
           </p>
@@ -123,17 +125,6 @@ export function BlockView({ b }: { b: Block }) {
 
 /* ---------- 설명(Lesson) 필드 ---------- */
 
-const FIELD_LABEL: Record<LessonField['k'], string> = {
-  ONE: '한 줄 정의',
-  LIKE: '일상 비유',
-  STEP: '하나씩 뜯어보기',
-  WHY: '왜 필요할까?',
-  USE: '어디에 쓰일까?',
-  KEY: '꼭 알아둘 점',
-  PRO: '장점',
-  CON: '단점',
-  END: '결론',
-};
 const FIELD_CLASS: Partial<Record<LessonField['k'], string>> = { LIKE: 'like', PRO: 'pro', CON: 'con', END: 'end' };
 
 /** 단계 목록: "**용어**: 설명"이면 용어를 한 줄, 설명을 다음 줄에 두어 훑어보기 쉽게 */
@@ -170,6 +161,7 @@ function SubBlock({ b }: { b: Block }) {
 }
 
 export function FieldView({ f }: { f: LessonField }) {
+  const { t } = useLang();
   const subs = f.sub.map((b, i) => <SubBlock key={i} b={b} />);
   if (f.k === 'ONE') {
     return (
@@ -185,7 +177,7 @@ export function FieldView({ f }: { f: LessonField }) {
     <div className={`lf ${FIELD_CLASS[f.k] ?? ''}`}>
       <span className="k">
         {f.k === 'LIKE' && <Icon name="bulb" />}
-        {FIELD_LABEL[f.k]}
+        {t.field[f.k]}
       </span>
       {f.text && (
         <p>

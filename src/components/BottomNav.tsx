@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router';
+import { useLang } from '../i18n/LangProvider';
 import { useProgress } from '../state/ProgressProvider';
 import { Icon } from './Icon';
 
@@ -9,23 +10,24 @@ import { Icon } from './Icon';
  */
 export function BottomNav() {
   const wrong = Object.keys(useProgress().wrong).length;
+  const { t, base } = useLang();
   return (
-    <nav className="nav" aria-label="메뉴">
+    <nav className="nav" aria-label={t.menu}>
       <div className="in">
-        <NavLink to="/" end>
+        <NavLink to={base || '/'} end>
           <Icon name="grid" size={22} />
-          주제
+          {t.navTopics}
         </NavLink>
-        <NavLink to="/random">
+        <NavLink to={`${base}/random`}>
           <Icon name="dice" size={22} />
-          랜덤 퀴즈
+          {t.navRandom}
         </NavLink>
-        <NavLink to="/review">
+        <NavLink to={`${base}/review`}>
           <Icon name="note" size={22} />
           <span>
-            오답 노트
+            {t.navReview}
             {wrong > 0 && (
-              <span className="cnt" aria-label={`${wrong}개`}>
+              <span className="cnt" aria-label={t.countBadge(wrong)}>
                 {wrong}
               </span>
             )}

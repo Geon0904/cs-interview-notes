@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import type { QuizItem } from '../content/types';
+import { useLang } from '../i18n/LangProvider';
 import { useProgressDispatch } from '../state/ProgressProvider';
 import { Inline } from './Blocks';
 import { Icon } from './Icon';
@@ -33,6 +34,7 @@ const LETTERS = 'ABCD';
  */
 export function QuizRunner({ items, review = false, onFinish, onRestart, resultActions }: Props) {
   const dispatch = useProgressDispatch();
+  const { t } = useLang();
   const [i, setI] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
   const [checked, setChecked] = useState(false);
@@ -42,8 +44,8 @@ export function QuizRunner({ items, review = false, onFinish, onRestart, resultA
   if (items.length === 0) {
     return (
       <div className="empty">
-        <b>풀 문제가 없어요</b>
-        <span>오답이 생기면 여기서 다시 풀 수 있습니다.</span>
+        <b>{t.noQuestionsTitle}</b>
+        <span>{t.noQuestionsBody}</span>
       </div>
     );
   }
@@ -53,16 +55,11 @@ export function QuizRunner({ items, review = false, onFinish, onRestart, resultA
   if (done) {
     const n = items.length;
     const r = score / n;
-    const msg =
-      r === 1
-        ? '전부 맞혔어요. 면접 답을 소리 내어 한 번 더 말해 보세요.'
-        : r >= 0.7
-          ? '거의 다 왔어요. 틀린 문제는 오답 노트에 모아 두었습니다.'
-          : '문답을 한 번 더 보고 다시 풀어 보세요. 틀린 문제는 오답 노트에 있습니다.';
+    const msg = r === 1 ? t.resultPerfect : r >= 0.7 ? t.resultGood : t.resultRetry;
     return (
       <>
         <section className="card result" aria-live="polite">
-          <span className="eyebrow">결과</span>
+          <span className="eyebrow">{t.result}</span>
           <span className="big">
             {score}
             <small> / {n}</small>
@@ -71,7 +68,7 @@ export function QuizRunner({ items, review = false, onFinish, onRestart, resultA
         </section>
         <div className="stack">
           <button type="button" className="cta" onClick={onRestart}>
-            다시 풀기
+            {t.retry}
           </button>
           {resultActions?.(score, n)}
         </div>
@@ -106,10 +103,8 @@ export function QuizRunner({ items, review = false, onFinish, onRestart, resultA
     <div className="qz">
       <div className="qprog">
         <div className="row">
-          <span>
-            문제 {i + 1} / {items.length}
-          </span>
-          <span>맞힌 문제 {score}</span>
+          <span>{t.questionOf(i + 1, items.length)}</span>
+          <span>{t.correctSoFar(score)}</span>
         </div>
         <div className="segs" aria-hidden="true">
           {items.map((_, j) => (
@@ -141,18 +136,18 @@ export function QuizRunner({ items, review = false, onFinish, onRestart, resultA
       {checked ? (
         <>
           <div className={`fb ${correct ? 'right' : 'wrong'}`} role="status">
-            <b>{correct ? '정답입니다' : `아쉬워요 · 정답은 ${LETTERS[q.ans]}`}</b>
+            <b>{correct ? t.correct : t.wrongAnswer(LETTERS[q.ans]!)}</b>
             <p>
               <Inline text={q.exp} />
             </p>
           </div>
           <button type="button" className="cta" onClick={next}>
-            {i + 1 < items.length ? '다음 문제' : '결과 보기'} <Icon name="arrow" />
+            {i + 1 < items.length ? t.nextQuestion : t.seeResult} <Icon name="arrow" />
           </button>
         </>
       ) : (
         <button type="button" className="cta" disabled={picked === null} onClick={check}>
-          정답 확인
+          {t.check}
         </button>
       )}
     </div>

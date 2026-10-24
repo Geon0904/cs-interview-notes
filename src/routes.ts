@@ -6,23 +6,19 @@
  *   /topic/07/learn?s=3        07번 주제 · 설명 탭 · 3번째 섹션
  *   /random?stage=base         랜덤 퀴즈
  *   /review                    오답 노트
+ *   /en/...                    위 모든 주소의 영어판 (base = '/en')
  */
-export const TOPIC_TABS = [
-  { key: 'learn', label: '설명' },
-  { key: 'concept', label: '개념 정리' },
-  { key: 'qa', label: '문답' },
-  { key: 'quiz', label: '퀴즈' },
-] as const;
+export const TOPIC_TABS = ['learn', 'concept', 'qa', 'quiz'] as const;
 
-export type TopicTab = (typeof TOPIC_TABS)[number]['key'];
+export type TopicTab = (typeof TOPIC_TABS)[number];
 
 export function isTopicTab(v: string | undefined): v is TopicTab {
-  return TOPIC_TABS.some((t) => t.key === v);
+  return TOPIC_TABS.some((t) => t === v);
 }
 
-/** sec는 0부터, 주소의 s는 사람이 읽기 쉽게 1부터 */
-export function topicPath(id: string, tab: TopicTab, sec = 0): string {
-  return `/topic/${id}/${tab}${sec > 0 ? `?s=${sec + 1}` : ''}`;
+/** base는 언어별 주소 앞부분('' 또는 '/en'). sec는 0부터, 주소의 s는 사람이 읽기 쉽게 1부터 */
+export function topicPath(base: string, id: string, tab: TopicTab, sec = 0): string {
+  return `${base}/topic/${id}/${tab}${sec > 0 ? `?s=${sec + 1}` : ''}`;
 }
 
 export function parseSection(v: string | null, count: number): number {

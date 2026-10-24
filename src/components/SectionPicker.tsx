@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef } from 'react';
 import { Link } from 'react-router';
+import { useLang } from '../i18n/LangProvider';
 import { Inline } from './Blocks';
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
 
 /** 가로로 스크롤되는 섹션 선택 줄. 현재 섹션이 화면 안에 보이도록 스크롤 위치를 맞춰요. */
 export function SectionPicker({ titles, current, hrefFor, done }: Props) {
+  const { t } = useLang();
   const box = useRef<HTMLElement>(null);
 
   // useLayoutEffect: 화면에 그려지기 "직전"에 실행돼서, 스크롤이 튀는 모습이 보이지 않아요.
@@ -22,12 +24,12 @@ export function SectionPicker({ titles, current, hrefFor, done }: Props) {
   }, [current]);
 
   return (
-    <nav className="secpick" ref={box} aria-label="섹션 선택">
-      {titles.map((t, i) => (
+    <nav className="secpick" ref={box} aria-label={t.sectionPicker}>
+      {titles.map((title, i) => (
         <Link key={i} to={hrefFor(i)} replace aria-current={i === current ? 'true' : undefined}>
-          {i + 1}. <Inline text={t} />
+          {i + 1}. <Inline text={title} />
           {done(i) && (
-            <span className="ok" aria-label="완료">
+            <span className="ok" aria-label={t.done}>
               ✓
             </span>
           )}

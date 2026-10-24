@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { shuffle } from '../lib/shuffle';
+import { switchLangPath } from '../i18n/lang';
 import { parseSection, topicPath } from '../routes';
 import { cardKey, firstOpenCard, initialProgress, nextOpenCard, progressReducer, sectionDone, type Progress } from './progress';
 
@@ -52,9 +53,20 @@ describe('카드 진도 계산', () => {
 
 describe('주소 규칙', () => {
   it('섹션은 주소에서 1부터, 내부에서는 0부터', () => {
-    expect(topicPath('07', 'learn', 0)).toBe('/topic/07/learn');
-    expect(topicPath('07', 'qa', 2)).toBe('/topic/07/qa?s=3');
+    expect(topicPath('', '07', 'learn', 0)).toBe('/topic/07/learn');
+    expect(topicPath('', '07', 'qa', 2)).toBe('/topic/07/qa?s=3');
+    expect(topicPath('/en', '07', 'qa', 2)).toBe('/en/topic/07/qa?s=3');
     expect(parseSection('3', 10)).toBe(2);
+  });
+  it.each([
+    ['/', '', 'en', '/en'],
+    ['/topic/07/qa', '?s=3', 'en', '/en/topic/07/qa?s=3'],
+    ['/en', '', 'ko', '/'],
+    ['/en/review', '', 'ko', '/review'],
+    ['/en/topic/01/learn', '', 'en', '/en/topic/01/learn'],
+    ['/random', '?stage=ai', 'ko', '/random?stage=ai'],
+  ] as const)('언어 전환: %s%s → %s = %s', (path, search, to, want) => {
+    expect(switchLangPath(path, search, to)).toBe(want);
   });
   it.each([null, '0', '11', 'abc', '1.5'])('잘못된 섹션 값 %s → 첫 섹션', (v) => expect(parseSection(v, 10)).toBe(0));
 });

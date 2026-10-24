@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { buildIndex, buildQuizBank, STAGES } from './assemble';
+import { buildIndex, buildQuizBank, checkParity, STAGES } from './assemble';
 import { ContentError, parseTopic } from './parser';
 
 const HEAD = ['@id 99', '@ko 테스트', '@en Test', '@desc d', '@analogy a', '@intro i', '@one o', ''].join('\n');
@@ -102,7 +102,7 @@ describe('실제 콘텐츠 (content/*.md)', () => {
   });
 
   it('퀴즈 묶음은 모든 주제의 문항을 담는다', () => {
-    const bank = buildQuizBank(topics);
+    const bank = buildQuizBank(topics, 'ko');
     expect(Object.keys(bank)).toHaveLength(16);
     expect(Object.values(bank).reduce((n, b) => n + b.items.length, 0)).toBe(topics.reduce((n, t) => n + t.quiz.length, 0));
   });
@@ -114,6 +114,39 @@ describe('buildIndex', () => {
     expect(() => buildIndex([t], [])).toThrowError(/어느 단계에도 없어요/);
   });
   it('단계에 존재하지 않는 주제 번호가 있으면 실패한다', () => {
-    expect(() => buildIndex([t], [{ no: '1단계', name: 'n', key: 'base', topics: ['99', '00'] }])).toThrowError(/없는 주제 00/);
+    expect(() => buildIndex([t], [{ key: 'base', topics: ['99', '00'] }])).toThrowError(/없는 주제 00/);
+  });
+});
+
+describe('checkParity (번역본 구조 검사)', () => {
+  const base = [
+    '## S',
+    '#### L',
+    'ONE: a',
+    'LIKE: b',
+    'STEP:',
+    '1. x',
+    '2. y',
+    'END: c',
+    '### Q',
+    'E: e',
+    'A: a',
+  ];
+  const ko = parseTopic(doc(base.join('\n')), 'ko.md');
+  const en = (lines: string[], quiz = QUIZ) => parseTopic(`${HEAD}\n${lines.join('\n')}\n${quiz}\n`, 'en.md');
+
+  it('글자만 다르고 구조가 같으면 통과', () => {
+    const translated = base.map((l) => l.replace(/: .+$/, ': translated').replace(/^\d\. .+$/, (m) => m.slice(0, 3) + 'item'));
+    expect(() => checkParity(ko, en(translated), 'en.md')).not.toThrow();
+  });
+  it.each([
+    ['문답이 빠지면', base.filter((l) => l !== 'A: a'), /문답 1/],
+    ['단계 항목 수가 다르면', base.filter((l) => l !== '2. y'), /ol 2.*ol 1/],
+    ['필드 구성이 다르면', base.flatMap((l) => (l.startsWith('END') ? ['KEY: k', l] : [l])), /필드/],
+  ])('%s 실패', (_, lines, msg) => {
+    expect(() => checkParity(ko, en(lines), 'en.md')).toThrowError(msg);
+  });
+  it('퀴즈 정답 위치가 바뀌면 실패', () => {
+    expect(() => checkParity(ko, en(base, QUIZ.replace('= B', '= C')), 'en.md')).toThrowError(/정답 B vs C/);
   });
 });

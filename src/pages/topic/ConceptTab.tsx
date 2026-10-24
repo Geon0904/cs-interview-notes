@@ -2,6 +2,7 @@ import { Link } from 'react-router';
 import { BlockView, Inline, Table } from '../../components/Blocks';
 import { Icon } from '../../components/Icon';
 import type { Topic } from '../../content/types';
+import { useLang } from '../../i18n/LangProvider';
 import { topicPath } from '../../routes';
 import { sectionDone } from '../../state/progress';
 import { useProgress } from '../../state/ProgressProvider';
@@ -10,6 +11,7 @@ import { TopicIntro } from './TopicIntro';
 /** 개념 정리 탭: 주제를 한 장에 요약 (한 줄 답, 학습 순서, 표, 꼭 기억할 것) */
 export function ConceptTab({ topic }: { topic: Topic }) {
   const p = useProgress();
+  const { t, base } = useLang();
   const hasLessons = topic.sections.some((s) => s.lessons.length > 0);
 
   // 카드 곳곳의 '기억할 것(M:)'만 모아 한 번에 복습
@@ -27,26 +29,26 @@ export function ConceptTab({ topic }: { topic: Topic }) {
     <>
       <TopicIntro topic={topic} />
 
-      <section className="card neon" aria-label="한 줄 면접 답">
-        <span className="lbl mono">한 줄 면접 답</span>
+      <section className="card neon" aria-label={t.oneLineAnswer}>
+        <span className="lbl mono">{t.oneLineAnswer}</span>
         <p className="txt">
           <Inline text={topic.one} />
         </p>
       </section>
 
       <section className="group">
-        <h2 className="h2">학습 순서</h2>
+        <h2 className="h2">{t.studyOrder}</h2>
         <div className="secs">
           {topic.sections.map((s, si) => {
             const ok = sectionDone(p, topic.id, si, s.cards.length);
             const n = s.cards.length;
             return (
-              <Link key={si} to={topicPath(topic.id, hasLessons ? 'learn' : 'qa', si)}>
+              <Link key={si} to={topicPath(base, topic.id, hasLessons ? 'learn' : 'qa', si)}>
                 <span className="n">{si + 1}</span>
                 <span className="nm">
                   <Inline text={s.title} />
                 </span>
-                <span className={`st${ok === n ? ' done' : ''}`}>{ok === n ? '완료' : ok ? `${ok}/${n}` : `${n}문항`}</span>
+                <span className={`st${ok === n ? ' done' : ''}`}>{ok === n ? t.done : ok ? `${ok}/${n}` : t.questionsCount(n)}</span>
               </Link>
             );
           })}
@@ -55,7 +57,7 @@ export function ConceptTab({ topic }: { topic: Topic }) {
 
       {tables.length > 0 && (
         <section className="group">
-          <h2 className="h2">한눈에 보는 표</h2>
+          <h2 className="h2">{t.tablesAtGlance}</h2>
           {tables.map((x, i) => (
             <div className="group" key={i}>
               {x.pre.map((b, j) => (
@@ -69,7 +71,7 @@ export function ConceptTab({ topic }: { topic: Topic }) {
 
       {mems.length > 0 && (
         <section className="group">
-          <h2 className="h2">꼭 기억할 것</h2>
+          <h2 className="h2">{t.mustRemember}</h2>
           <ul className="memlist">
             {mems.map((m, i) => (
               <li className="m" key={i}>
@@ -86,12 +88,12 @@ export function ConceptTab({ topic }: { topic: Topic }) {
       )}
 
       {hasLessons && (
-        <Link className="cta" to={topicPath(topic.id, 'learn', Math.max(0, firstUnread))}>
-          설명부터 읽기 <Icon name="arrow" />
+        <Link className="cta" to={topicPath(base, topic.id, 'learn', Math.max(0, firstUnread))}>
+          {t.readLessonsFirst} <Icon name="arrow" />
         </Link>
       )}
-      <Link className={`cta${hasLessons ? ' ghost' : ''}`} to={topicPath(topic.id, 'qa', Math.max(0, firstUndone))}>
-        문답으로 공부하기 <Icon name="arrow" />
+      <Link className={`cta${hasLessons ? ' ghost' : ''}`} to={topicPath(base, topic.id, 'qa', Math.max(0, firstUndone))}>
+        {t.studyWithQa} <Icon name="arrow" />
       </Link>
     </>
   );

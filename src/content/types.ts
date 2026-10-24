@@ -74,16 +74,15 @@ export interface Topic {
 
 export type StageKey = 'base' | 'code' | 'svc' | 'ai';
 
+/** 학습 단계. 화면에 보이는 단계 이름은 언어별 문구 사전(src/i18n/strings.ts)에 있어요. */
 export interface Stage {
-  no: string;
-  name: string;
   key: StageKey;
   topics: string[];
 }
 
 /**
  * 홈 화면에 필요한 최소 정보만 담은 요약본.
- * 전체 콘텐츠(약 1.3MB)를 처음부터 내려받지 않도록, 홈은 이 작은 인덱스만 읽고
+ * 전체 콘텐츠(약 0.8MB)를 처음부터 내려받지 않도록, 홈은 이 작은 인덱스만 읽고
  * 주제 본문은 주제를 열 때 따로 불러옵니다(Code Splitting).
  */
 export interface TopicMeta {
@@ -100,7 +99,9 @@ export interface TopicMeta {
 export interface ContentIndex {
   stages: Stage[];
   topics: TopicMeta[];
+  /** 아직 번역되지 않아 한국어 원문을 대신 쓴 주제 (번역이 끝나면 빈 배열) */
+  fallback: string[];
 }
 
 /** 랜덤 퀴즈·오답 노트용: 모든 주제의 퀴즈만 모은 묶음. */
-export type QuizBank = Record<string, { ko: string; items: QuizItem[] }>;
+export type QuizBank = Record<string, { name: string; items: QuizItem[] }>;
