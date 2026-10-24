@@ -4,4 +4,6 @@ CS 기초 16개 주제를 일상 비유와 단계별 설명으로 익히는 면�
 
 A web app for CS interview prep. It covers 16 core computer science topics, explaining each one with everyday analogies and step-by-step breakdowns. It's available in Korean and English, and you can install it on your phone and use it offline.
 
+**Demo**: https://cs-interview-notes-flax.vercel.app
+
 React · TypeScript · Vite · PWA

@@ -5,7 +5,7 @@
   "description": "CS 기초를 일상 비유로 쉽게 배우는 면접 준비 웹 앱 (React + TypeScript + Vite PWA)",
   "type": "module",
   "engines": {
-    "node": ">=20.19"
+    "node": "^20.19.0 || ^22.13.0 || >=24"
   },
   "scripts": {
     "content": "tsx scripts/build-content.ts",
