@@ -149,8 +149,11 @@ test('영어판: 없는 주소는 영어 404 화면', async ({ page }) => {
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 });
 
-test('영어판: 모든 주제의 모든 탭과 설명 섹션이 모바일 폭에서 넘치지 않고 한글이 없어요', async ({ page }) => {
+test('영어판: 모든 주제의 모든 탭과 설명 섹션이 작은 휴대폰 폭(360px)에서도 넘치지 않고 한글이 없어요', async ({ page }) => {
   test.setTimeout(300_000);
+  // 영어는 가운뎃점으로 이어진 긴 용어(Independence·Span·Basis·Dimension)가 많아서 폭에 더 민감해요.
+  // 서버마다 대체 글꼴 폭이 조금씩 달라 412px에서는 통과했다 실패했다 해서, 더 좁은 360px(작은 휴대폰)로 여유 있게 검사해요.
+  await page.setViewportSize({ width: 360, height: 780 });
   for (let i = 1; i <= 16; i++) {
     const id = String(i).padStart(2, '0');
     for (const tab of ['concept', 'qa', 'quiz']) {

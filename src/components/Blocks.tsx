@@ -1,15 +1,34 @@
+import { Fragment, type ReactNode } from 'react';
 import type { Block, LessonField } from '../content/types';
 import { commentStart } from '../content/code';
 import { splitTerm, tokenizeInline } from '../content/inline';
 import { useLang } from '../i18n/LangProvider';
 import { Icon } from './Icon';
 
+/**
+ * 가운뎃점(·) 뒤에 <wbr>(줄을 바꿔도 되는 자리)을 넣어요.
+ * 'Independence·Span·Basis·Dimension'처럼 띄어쓰기 없이 ·로 이어진 용어는 브라우저가 한 단어로 보고
+ * 화면이 좁으면 단어 중간('Di/mension')에서 끊거나 화면 밖으로 밀어내요. <wbr>은 글자를 추가하지 않아서
+ * 복사·검색·화면 낭독에는 영향이 없어요.
+ */
+function breakAtDots(v: string): ReactNode {
+  if (!v.includes('·')) return v;
+  return v.split('·').map((part, i) =>
+    i === 0 ? part : (
+      <Fragment key={i}>
+        ·<wbr />
+        {part}
+      </Fragment>
+    ),
+  );
+}
+
 /** `코드`와 **굵게**만 있는 문장을 React 요소로 그려요. (텍스트는 React가 자동 이스케이프) */
 export function Inline({ text }: { text: string }) {
   return (
     <>
       {tokenizeInline(text).map((tk, i) =>
-        tk.t === 'code' ? <code key={i}>{tk.v}</code> : tk.t === 'bold' ? <strong key={i}>{tk.v}</strong> : tk.v,
+        tk.t === 'code' ? <code key={i}>{tk.v}</code> : tk.t === 'bold' ? <strong key={i}>{breakAtDots(tk.v)}</strong> : <Fragment key={i}>{breakAtDots(tk.v)}</Fragment>,
       )}
     </>
   );
