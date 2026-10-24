@@ -28,6 +28,9 @@ jobs:
       # package-lock.json에 적힌 버전 그대로 설치 (누가 언제 설치해도 같은 결과)
       - run: npm ci
 
+      # 영어 번역이 빠진 주제가 있으면 여기서 실패 (로컬에서는 경고만 하고 한국어로 대체)
+      - run: npm run content -- --strict
+
       # 콘텐츠 검증 → 타입 검사 → 린트 → 단위 테스트
       - run: npm run check
 

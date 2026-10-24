@@ -108,6 +108,26 @@ describe('실제 콘텐츠 (content/*.md)', () => {
   });
 });
 
+describe('영어 콘텐츠 (content-en/*.md)', () => {
+  const root = join(import.meta.dirname, '..', '..');
+  const read = (d: string, f: string) => parseTopic(readFileSync(join(root, d, f), 'utf8'), `${d}/${f}`);
+  const files = readdirSync(join(root, 'content')).filter((f) => f.endsWith('.md')).sort();
+
+  it('16개 주제가 모두 번역되어 있다', () => {
+    expect(readdirSync(join(root, 'content-en')).filter((f) => f.endsWith('.md')).sort()).toEqual(files);
+  });
+
+  it.each(files)('%s: 한국어판과 구조가 같다 (문항 수·표 크기·퀴즈 정답)', (f) => {
+    expect(() => checkParity(read('content', f), read('content-en', f), `content-en/${f}`)).not.toThrow();
+  });
+
+  it.each(files)('%s: @ko 줄 말고는 한글이 없다', (f) => {
+    const lines = readFileSync(join(root, 'content-en', f), 'utf8').split('\n');
+    const bad = lines.flatMap((l, i) => (!l.startsWith('@ko ') && /[가-힣]/.test(l) ? [`${i + 1}: ${l.slice(0, 60)}`] : []));
+    expect(bad).toEqual([]);
+  });
+});
+
 describe('buildIndex', () => {
   const t = parseTopic(doc('## S\n### Q\nE: e'), 'x.md');
   it('단계에 없는 주제가 있으면 실패한다', () => {

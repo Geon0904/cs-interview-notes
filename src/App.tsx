@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import {
   createBrowserRouter,
   isRouteErrorResponse,
@@ -18,11 +19,14 @@ import { STRINGS, type Lang } from './i18n/strings';
 import Home from './pages/Home';
 import { ProgressProvider } from './state/ProgressProvider';
 
+/** 주소가 /en으로 시작하면 영어. Provider 바깥(에러·첫 로딩 화면)에서도 쓸 수 있게 주소만 보고 판단해요. */
+const langOf = (pathname: string): Lang => (pathname === '/en' || pathname.startsWith('/en/') ? 'en' : 'ko');
+
 /** 모든 화면의 바깥 틀: 스크롤 복원 + 화면 전환 중 표시 */
 function Root() {
   const nav = useNavigation();
   const { pathname } = useLocation();
-  const t = STRINGS[pathname === '/en' || pathname.startsWith('/en/') ? 'en' : 'ko'];
+  const t = STRINGS[langOf(pathname)];
   return (
     <>
       {/* 다음 화면의 데이터·코드를 받는 동안 위쪽에 얇은 진행 막대를 보여 줘요. */}
@@ -47,7 +51,7 @@ function WithNav() {
 function Fallback() {
   return (
     <main className="wrap">
-      <p className="note">{STRINGS.ko.loading}</p>
+      <p className="note">{STRINGS[langOf(window.location.pathname)].loading}</p>
     </main>
   );
 }
@@ -56,10 +60,15 @@ function Fallback() {
 function ErrorPage() {
   const err = useRouteError();
   const { pathname } = useLocation();
-  const lang: Lang = pathname === '/en' || pathname.startsWith('/en/') ? 'en' : 'ko';
+  const lang = langOf(pathname);
   const t = STRINGS[lang];
   const notFound = isRouteErrorResponse(err) && err.status === 404;
   if (!notFound) console.error(err);
+  // Provider 바깥이라 useDocumentTitle을 못 써요. 탭 제목과 <html lang>을 여기서 직접 맞춰요.
+  useEffect(() => {
+    document.title = `${notFound ? t.notFoundTitle : t.errorTitle} · ${t.appName}`;
+    document.documentElement.lang = lang;
+  }, [lang, notFound, t]);
   return (
     <main className="wrap">
       <header className="hero">

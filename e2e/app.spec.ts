@@ -1,5 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
 
+/** 영어판 화면에 한글이 섞여 있으면 실패 (언어 버튼의 aria-label "Language · 언어"처럼 화면에 안 보이는 속성은 제외) */
+async function expectNoHangul(page: Page) {
+  const text = await page.evaluate(() => `${document.title}\n${document.body.innerText}`);
+  expect(text.match(/\S*[\uac00-\ud7a3]\S*/g)).toBeNull();
+}
+
 /** 가로 스크롤이 생기면(레이아웃이 화면 밖으로 넘치면) 실패 */
 async function expectNoHorizontalOverflow(page: Page) {
   const { scroll, client } = await page.evaluate(() => ({
@@ -110,6 +116,56 @@ test('모든 설명 섹션이 모바일 폭에서 넘치지 않아요', async ({
       await page.goto(`/topic/${id}/learn?s=${s}`);
       await expect(page.locator('.sechead h2')).toContainText(`${s}.`);
       await expectNoHorizontalOverflow(page);
+    }
+  }
+});
+
+test('언어 전환: 같은 화면의 영어판으로 이동하고 진도는 이어져요', async ({ page }) => {
+  await page.goto('/topic/01/qa');
+  await page.locator('#card-0').getByRole('button', { name: '이해했어요' }).click();
+
+  await page.getByRole('link', { name: 'EN', exact: true }).click();
+  await expect(page).toHaveURL(/\/en\/topic\/01\/qa$/);
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  await expect(page.locator('.thead h1')).toHaveText('Discrete Math');
+  // 메모리의 진도는 언어와 상관없이 같은 번호 체계라 그대로 남아 있어요.
+  await expect(page.locator('.sechead span')).toContainText('1/');
+
+  await page.getByRole('link', { name: 'Back to topics' }).click();
+  await expect(page).toHaveURL(/\/en$/);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('What will you');
+  await expect(page.locator('.trow')).toHaveCount(16);
+
+  await page.getByRole('link', { name: 'KO', exact: true }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.locator('html')).toHaveAttribute('lang', 'ko');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('오늘은 무엇을');
+});
+
+test('영어판: 없는 주소는 영어 404 화면', async ({ page }) => {
+  await page.goto('/en/topic/99/learn');
+  await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible();
+  await expect(page).toHaveTitle('Page not found · CS Interview Notes');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+});
+
+test('영어판: 모든 주제의 모든 탭과 설명 섹션이 모바일 폭에서 넘치지 않고 한글이 없어요', async ({ page }) => {
+  test.setTimeout(300_000);
+  for (let i = 1; i <= 16; i++) {
+    const id = String(i).padStart(2, '0');
+    for (const tab of ['concept', 'qa', 'quiz']) {
+      await page.goto(`/en/topic/${id}/${tab}`);
+      await expect(page.locator('.thead h1')).toBeVisible();
+      await expectNoHorizontalOverflow(page);
+      await expectNoHangul(page);
+    }
+    await page.goto(`/en/topic/${id}/learn`);
+    const count = await page.locator('.secpick a').count();
+    for (let s = 1; s <= count; s++) {
+      await page.goto(`/en/topic/${id}/learn?s=${s}`);
+      await expect(page.locator('.sechead h2')).toContainText(`${s}.`);
+      await expectNoHorizontalOverflow(page);
+      await expectNoHangul(page);
     }
   }
 });

@@ -49,7 +49,9 @@ export default function TopicPage() {
           </Link>
           <div className="tt">
             <span className="eyebrow">
-              {st.no} · {topic.id} · {lang === 'ko' ? topic.en : topic.ko}
+              {/* 한국어판은 영어 이름을 함께 보여 줘요(용어를 영어로 익히도록). 영어판에 한글을 섞으면 읽기만 방해해서 빼요. */}
+              {st.no} · {topic.id}
+              {lang === 'ko' && ` · ${topic.en}`}
             </span>
             <h1>{topicName(topic, lang)}</h1>
           </div>
